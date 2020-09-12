@@ -68,7 +68,6 @@ db <- dbConnect(RSQLite::SQLite(),"data/tidynomicon/example.db")
 ## Use `head()` to look at the first few rows of the `person_df` dataframe
 person_df <- dbGetQuery(db, "SELECT * FROM PERSON")
 head(person_df)
-___
 
 ## List the tables using the `dbListTables()` function
 ## Assign the result to the `table_names` variable
