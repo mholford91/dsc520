@@ -75,3 +75,4 @@ ggplot(data=florida_df, aes(x=date, group=1)) +
                       breaks = c("Florida", "New York", "California"),
                       values = c("darkred", "darkgreen", "steelblue")) +
   xlab(" ") + ylab("Cases") + scale_y_log10()
+
