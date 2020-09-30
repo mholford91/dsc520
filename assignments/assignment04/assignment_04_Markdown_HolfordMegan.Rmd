@@ -1,0 +1,104 @@
+---
+title: "ASSIGNMENT 4"
+author: "Megan Holford"
+date: '2020-09-28'
+output:
+  pdf_document: default
+  word_document: default
+bibliography: bibliography.bib
+---
+
+# Markdown Basics
+
+## Favorite Foods
+---
+1.Pot Roast
+
+2.Ice Cream
+
+3.Tomatoes
+
+## Images
+---
+![All Cases (Log Plot)](10-all-cases-log.png)
+
+## Add a Quote
+---
+> The way to get started is to
+> quit talking and begin doing.
+>-Walt Disney
+
+
+## Add an Equation
+---
+$$E=mc^2$$
+
+## Add a Footnote
+---
+This is a footnote^[The footnote.]
+
+## Add Citations
+---
+* R for Everyone [@lander2014r]
+* Discovering Statistics Using R [@field2012discovering]
+
+# Inline Code
+---
+```{r include=FALSE}
+library(ggplot2)
+heights_df <- read.csv("data/r4ds/heights.csv")
+covid_df <- read.csv("data/nytimes/covid-19-data/us-states.csv")
+california_df <- covid_df[ which( covid_df$state == "California"), ]
+ny_df <- covid_df[ which( covid_df$state == "New York"), ]
+florida_df <- covid_df[ which( covid_df$state == "Florida"), ]
+```
+
+
+## NY Times COVID-19 Data
+---
+```{r echo=FALSE}
+ggplot(data=florida_df, aes(x=date, group=1)) +
+  geom_line(aes(y = cases, colour = "Florida")) +
+  geom_line(data=ny_df, aes(y = cases,colour="New York")) +
+  geom_line(data=california_df, aes(y = cases, colour="California")) +
+  scale_colour_manual("",
+                      breaks = c("Florida", "New York", "California"),
+                      values = c("darkred", "darkgreen", "steelblue")) +
+  xlab(" ") + ylab("Cases") + scale_y_log10()
+```
+
+## R4DS Height vs Earnings
+---
+```{r echo=FALSE}
+ggplot(heights_df, aes(x=height, y=earn, col=sex)) + geom_point() + ggtitle("Height vs. Earnings") + xlab("Height (Inches)") + ylab("Earnings (Dollars)")
+```
+
+# Tables
+---
+
+## Knitr Table with Kable
+---
+```{r echo=FALSE}
+library(knitr)
+name <- c("Aragon", "Bilbo", "Frodo", "Galadriel", "Sam", "Gandalf", "Legolas", "Sauron", "Gollum")
+race <- c("Men", "Hobbit", "Hobbit", "Elf", "Hobbit", "Maia", "Elf", "Maia", "Hobbit")
+in_fellowship <- c(TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE)
+ring_bearer <- c(FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE)
+age <- c(88, 129, 51, 7000, 36, 2019, 2931, 7052, 589)
+characters_df <- data.frame(name,race,in_fellowship,ring_bearer,age)
+kable(characters_df, "simple", caption = "One Ring to Rule Them All")
+```
+
+## Pandoc Table
+---
+ Name       Race      In Fellowship?     Is Ring Bearer?   Age
+_________ ________ __________________ ___________________ ______
+ Aragon    Men         True               False            88
+ Bilbo     Hobbit      False              True             129
+ Frodo     Hobbit      True               True             51
+ Sam       Hobbit      True               True             36
+ Sauron    Maia        False              True             7052
+_________ ________ __________________ ___________________ ______
+
+
+# References
