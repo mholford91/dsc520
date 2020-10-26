@@ -1,0 +1,98 @@
+---
+title: "Week 8: Assignment 14"
+author: "Megan Holford"
+date: "2020-10-24"
+
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exercise 14: Fit a logistic regression model to the binary-classifier-data.csv dataset
+
+```{r}
+binary_df <- read.csv("data/binary-classifier-data.csv")
+head(binary_df)
+summary(binary_df)
+
+# Split data to use 80% of data to train the model and 20% of data to test the model
+library(caTools)
+binary_split <- sample.split(binary_df$label, SplitRatio=0.8)
+
+train <- subset(binary_df, binary_split==TRUE)
+test <- subset(binary_df, binary_split==FALSE)
+```
+
+## a. What is the accuracy of the logistic regression classifier?
+
+```{r}
+binary_glm <- glm(label ~ x + y, data=binary_df, family = binomial)
+
+summary(binary_glm)
+
+binary_predict <- predict(binary_glm, type="response")
+
+binary_cm <- table(Actual_Value = binary_df$label, Predicted_Value = binary_predict > 0.5)
+
+binary_cm
+
+binary_accuracy <- (binary_cm[[1,1]] + binary_cm[[2,2]]) / sum(binary_cm)
+
+binary_accuracy
+```
+
+The accuracy of the logistic regression model is approximately 58%.
+
+## b. How does the accuracy of the logistic regression classifier compare to the nearest neighbors algorithm?
+
+```{r echo=TRUE, include=TRUE}
+
+library(class)
+
+# Generating knn model with k=1
+
+binary_knn <- knn(train[2:3],test[2:3],k=1,cl=train$label)
+
+summary(binary_knn)
+
+
+
+##create confusion matrix
+
+binaryknn_cm <- table(binary_knn,test$label)
+
+ 
+
+##this function divides the correct predictions by total number of predictions that tell us how accurate the model is.
+
+accuracy <- function(x){sum(diag(x)/(sum(rowSums(x)))) * 100}
+
+accuracy(binaryknn_cm)
+
+
+
+# Running for multiple K Values
+
+for(i in 1:20){
+
+  ##print(paste("Model with K=", i))
+
+  binary_knn2 <- knn(train[2:3],test[2:3],k=i,cl=train$label)
+
+  binaryknn_cm2 <- table(binary_knn2,test$label)
+
+  print(paste("Accuracy of K=", i, accuracy(binaryknn_cm2)))
+}
+```
+
+
+The accuracy of the KNN model is approximately 96 to 97%.
+
+## c. Why is the accuracy of the logistic regression classifier different from that of the nearest neighbors?
+
+Logistic regression is similar to linear regression and calculates a linear output and is not as accurate when working with non-linear problems. The KNN is good for non-linear problems. Because the accuracy is beeter with the KNN model, the data classification seems to be non-linear and therefore linear models would not be as accurate. 

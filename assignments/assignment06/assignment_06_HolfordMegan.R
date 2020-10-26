@@ -60,3 +60,4 @@ adjusted_r_squared <- 1 - ((1 - r_squared)*(n - 1) / (n - p))
 
 ## Calculate the p-value from the F distribution
 p_value <- pf(f_score, dfm, dft, lower.tail=F)
+

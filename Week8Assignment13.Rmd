@@ -1,0 +1,56 @@
+---
+title: "Week 8: Assignment 13"
+author: "Megan Holford"
+date: "2020-10-24"
+
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Exercise 13: Fit a Logistic Regression Model to the Thoracic Surgery Binary Data
+
+a. Fit a binary logistic regression model to the data set that predicts whether or not the patient survived for one year (the Risk1Y variable) after the surgery. Use the glm() function to perform the logistic regression. See Generalized Linear Models for an example. Include a summary using the summary() function in your results.
+
+```{r echo=TRUE, include=TRUE}
+library(foreign)
+
+thoracic_df <- read.arff('data/ThoraricSurgery.arff')
+
+head(thoracic_df)
+
+thoracic_df$Risk1Yr<-relevel(thoracic_df$Risk1Yr, "T")
+
+thoraciclm <- glm(Risk1Yr ~ . , family ='binomial' , data = thoracic_df)
+
+summary(thoraciclm)
+```
+
+
+b. According to the summary, which variables had the greatest effect on the survival rate?
+
+1- PRE5      
+2- PRE9T       
+3- PRE14OC13  
+4- PRE14OC14   
+5- PRE17T
+6- PRE30T      
+
+c. To compute the accuracy of your model, use the dataset to predict the outcome variable. The percent of correct predictions is the accuracy of your model. What is the accuracy of your model?
+
+```{r echo=TRUE, include=TRUE}
+
+thoracic_predict <- predict(thoraciclm,thoracic_df,type = "response")
+
+thoracic_cm <- table(ActualValue=thoracic_df$Risk1Yr, PredictedValue = thoracic_predict < 0.5)
+
+thoracic_cm
+```
+
+
+The accuracy of this model is good for predicting false values. So this model is good for estimating when someone would live, but not for when someone would die (true values).
