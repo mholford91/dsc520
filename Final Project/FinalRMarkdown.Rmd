@@ -1,0 +1,165 @@
+---
+title: "Final Project"
+author: "Megan Holford"
+date: "11/19/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library (caret)
+library (plyr)
+library(tidyverse)
+library(ggplot2)
+
+diabetes<- read.csv("data/diabetes_data_upload.csv")
+
+```
+
+## Summarize the problem statement you addressed.
+
+For my final project, “can you predict the chance for an individual to have diabetes and what attributes can be used to make this prediction?” was the question I wanted to look at. I knew that data science, models, and machine learning is a growing aspect of the medical field at health care providers are looking for efficient ways to assist with diagnosing cases in their patients. This particular question can be helpful in finding if an individual has the chance to develop diabetes before onset and if measures can be taken to lessen or deter. I am not in the healthcare field, but I wanted to try and apply it myself with the knowledge I have gathered in this course. After working on my project, I definitely have a lot to learn, but this was a great way to try an understand how this is begin done and a glimpse into the future of healthcare.
+
+## Summarize how you addressed this problem statement (the data used and the methodology employed).
+
+For this assignment, I used several different models to see which models have better results with the available data. In particular I used logistic regression, KNN, random forest, gradient boosting, and regression tree. By using different models, I am able to see how models different with their accuracy with the data, and this also allows me to try out these models and continue my learning.
+
+## Models and Comparisons. 
+
+Importing libraries and data set. Also cleaning the data set for use. 
+
+```{r, echo= TRUE}
+## convert predictors except age into factors 
+diabetes<- diabetes %>% mutate_if(is.character, as.factor)
+
+names(diabetes)[3] <- "frequent.urination"
+names(diabetes)[4] <- "extreme.thirst"
+names(diabetes)[7] <- "extreme.hunger"
+names(diabetes)[13] <- "muscle.impairment"
+
+
+colnames(diabetes)
+str(diabetes)
+summary(diabetes)
+```
+
+Create a training set and a test set.
+
+```{r, echo= TRUE}
+
+set.seed(100)
+diabetes_data<- createDataPartition(diabetes$class, p=.75, list = F)
+train_diabetes<- diabetes[diabetes_data,]
+test_diabetes<- diabetes[-diabetes_data,]
+
+## tuning the parameters 
+diabetes_control<- trainControl(method = "repeatedcv", number = 10, repeats = 3)
+```
+
+##KNN classification model
+
+```{r, echo= FALSE}
+
+library(e1071)
+set.seed(100)
+diabetes_knnFit<- train(class~., data = train_diabetes, method="knn", preProcess=c("center","scale"),
+                        metric="Accuracy", tuneLength=17, trControl=diabetes_control)
+diabetes_knnFit
+ggplot(diabetes_knnFit, aes(x=k_values, y=Accuracy)) + geom_point() + geom_line(colour="red")
+scale_x_continuous(breaks = c(1:43)) # k=5 is used as it has the highest accuracy on training data.
+
+diabetes_knnPred<- predict(diabetes_knnFit, test_diabetes)
+
+cmKnn<- confusionMatrix(diabetes_knnPred, test_diabetes$class, positive = "Positive")
+cmKnn 
+```
+Accuracy is approximately 91% for the KNN model.
+
+
+##Classification Tree
+
+```{r, echo= FALSE}
+
+set.seed(100)
+diabetes_rpartFit<- train(class~., data = train_diabetes, method="rpart", metric="Accuracy", tuneLength=17, trControl=diabetes_control)
+
+rpart.plot::rpart.plot(diabetes_rpartFit$finalModel) 
+
+diabetes_rpartPred<- predict(diabetes_rpartFit, test_diabetes)
+cmRpart<- confusionMatrix(diabetes_rpartPred, test_diabetes$class, positive = "Positive")
+cmRpart 
+```
+Accuracy is approximately 86% for this model.
+
+##Logistic Regression
+
+```{r, echo= FALSE}
+
+set.seed(100)
+diabetes_lrFit<-train(class~., data = train_diabetes, method="glm", family="binomial", metric="Accuracy", 
+              tuneLength=17, trControl=diabetes_control)
+
+diabetes_lrPred<- predict(diabetes_lrFit, test_diabetes)
+cmLr<- confusionMatrix(diabetes_lrPred, test_diabetes$class, positive = "Positive")
+cmLr 
+```
+Accuracy rate of around 92% for logistic regression.
+
+##Random Forest
+
+```{r, echo= FALSE}
+
+set.seed(100)
+diabetes_rfFit<- train(class~., data = train_diabetes, method="rf", metric="Accuracy", tuneLength=17, trControl=diabetes_control)
+diabetes_rfFit %>% plot() 
+diabetes_rfFit
+
+diabetes_rfPred<- predict(diabetes_rfFit, test_diabetes)
+cmRf<- confusionMatrix(diabetes_rfPred, test_diabetes$class, positive = "Positive")
+cmRf
+```
+Accuracy rate of around 97% for random forest.
+
+##Gradient Boosting
+
+```{r, echo= FALSE}
+
+library(gbm)
+diabetes_gb<- expand.grid(.interaction.depth = (1:5) * 2,.n.trees = (1:10)*25, .shrinkage = c(0.01,0.05,0.1,0.5),.n.minobsinnode=10)
+
+set.seed(100)
+diabetes_gbFit<- train(class~., data = train_diabetes, method="gbm", 
+                       metric="Accuracy",trControl=diabetes_control, tuneGrid=diabetes_gb, 
+                       verbose=FALSE, distribution="bernoulli",tuneLength=17)
+diabetes_gbFit$finalModel
+
+diabetes_gbPred<- predict(diabetes_gbFit, test_diabetes)
+cmGb<- confusionMatrix(diabetes_gbPred, test_diabetes$class, positive = "Positive")
+cmGb 
+```
+There is an accuracy of approximately 97% for gradient boosting.
+
+##Comparing the models
+
+```{r, echo= FALSE}
+
+model_comp<- resamples(list(Knn=diabetes_knnFit, LogisticReg=diabetes_lrFit, RpartTree=diabetes_rpartFit, 
+                            RandomForest=diabetes_rfFit, GBM=diabetes_gbFit))
+summary(model_comp)
+dotplot(model_comp) # model for accuracy and kappa values from the confusion matrix for the  models
+```
+
+## Summarize the implications to the consumer (target audience) of your analysis.
+
+I am definitely not reinventing the wheel by using models to try and predict diabetes, but it was very interesting to work with the models and see how they compare in accuracy with my data set. 
+
+## Discuss the limitations of your analysis and how you, or someone else, could improve or build on it.
+
+One of the biggest challenges I think there is when it comes to creating models for your data is finding the right model to use with your data. One model may be a better fit depending on the data and parameters you are using. I definitely need more experience working with models and fitting them to get more understanding to which models are best to find what I am looking for. 
+
+The models that had the highest accuracy were Random Forest and Gradient Boosting models. While the other model did not have as high accuracy percentages, they are still helpful to look at and get a better look at the data.
+
+My data set also is set around common symptoms and side effects of diabetes and not actual blood work so predictions could be a good indicator on if a healthcare professional needs to look further into a diagnosis, but data with information on blood work, glucose levels, and more may have different results. 
+
+This type of data analysis is already out of my normal wheelhouse, so I did not go into those types of attributes, but it was definitely a great experience to try and understand how data science can be used in medical fields and why it is such a fast growing subset within the field. I look forward to learning more and getting more experience with R as well as learning more about understanding the data. 
